@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import 'key_manager.dart';
-import 'signature.dart';
+import 'signature_manager.dart';
 
 void main() {
   runApp(const MyApp());
@@ -84,7 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
           }
           break;
         case "payment_success":
-          final publicKey = KeyManager.fakePublicKey;
+          final publicKey = KeyManager.netbeePublicKey;
 
           final data = json["data"] as Map<String, dynamic>;
           final sign = data["sign"];
@@ -94,7 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
           final trace = data["trace"];
           final cardNumber = data["card_number"];
           final dateTime = data["datetime"];
-          final payload = data["payload"];
+          final payload = data["payload"] ?? "";
 
           final template =
               "#$amount,$rrn,$serial,$trace,$cardNumber,$dateTime,$payload#";
@@ -103,7 +103,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
           if (verified) {
             setState(() {
-              uiMessage = "payment failed and data verified";
+              uiMessage = "payment success and data verified";
             });
           } else {
             setState(() {
@@ -139,7 +139,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () async {
                 final key = KeyManager.fakePrivateKey;
                 const requestType = "payment_request";
-                const amount = 1000;
+                const amount = 2000;
                 const payload = "id=1";
                 final sign = SignatureManager.sign(key, "#$amount,$payload#");
 
