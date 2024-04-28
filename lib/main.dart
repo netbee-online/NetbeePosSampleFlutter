@@ -54,6 +54,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void messageReceived(Uint8List event) {
     try {
+      final publicKey = KeyManager.netbeePublicKey;
+
       final message = utf8.decode(event).trim();
       setState(() {
         uiMessage = message;
@@ -64,8 +66,6 @@ class _MyHomePageState extends State<MyHomePage> {
       final type = json["type"];
       switch (type) {
         case "payment_failed":
-          final publicKey = KeyManager.netbeePublicKey;
-
           final data = json["data"] as Map<String, dynamic>;
           final sign = data["sign"];
           final error = data["error"];
@@ -84,8 +84,6 @@ class _MyHomePageState extends State<MyHomePage> {
           }
           break;
         case "payment_success":
-          final publicKey = KeyManager.netbeePublicKey;
-
           final data = json["data"] as Map<String, dynamic>;
           final sign = data["sign"];
           final amount = data["amount"];
