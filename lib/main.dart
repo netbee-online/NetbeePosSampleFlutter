@@ -69,7 +69,9 @@ class _MyHomePageState extends State<MyHomePage> {
           final data = json["data"] as Map<String, dynamic>;
           final sign = data["sign"];
           final error = data["error"];
-          final template = "#$error#";
+          final stanId = data["stan_id"];
+          final payload = data["payload"] ?? "";
+          final template = "#$error,$stanId,$payload#";
 
           final verified = SignatureManager.verify(publicKey, sign, template);
 
@@ -92,10 +94,11 @@ class _MyHomePageState extends State<MyHomePage> {
           final trace = data["trace"];
           final cardNumber = data["card_number"];
           final dateTime = data["datetime"];
+          final stanId = data["stan_id"];
           final payload = data["payload"] ?? "";
 
           final template =
-              "#$amount,$rrn,$serial,$trace,$cardNumber,$dateTime,$payload#";
+              "#$amount,$rrn,$serial,$trace,$cardNumber,$dateTime,$stanId,$payload#";
 
           final verified = SignatureManager.verify(publicKey, sign, template);
 
@@ -139,10 +142,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 const requestType = "payment_request";
                 const amount = 2000;
                 const payload = "id=1";
+                const standId = "29935e1e-634a-417c-95f9-437ae1c0f972";
                 final sign = SignatureManager.sign(key, "#$amount,$payload#");
 
                 final json = """
-              { "type": "$requestType", "data": { "entity_type":"$requestType", "amount":$amount, "payload":"$payload", "sign": "$sign" } }
+              { "type": "$requestType", "data": { "entity_type":"$requestType", "amount":$amount, "stand_id":"$standId", "payload":"$payload", "sign": "$sign" } }
               """
                     .replaceAll("\n", "");
                 socket?.write("$json\n");
