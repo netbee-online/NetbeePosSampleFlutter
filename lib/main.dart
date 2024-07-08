@@ -43,13 +43,13 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    startConnection();
   }
 
   @override
-  void dispose() {
+  void dispose() async {
+    await socket?.close();
+
     super.dispose();
-    socket?.close();
   }
 
   void messageReceived(Uint8List event) {
@@ -77,11 +77,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
           if (verified) {
             setState(() {
-              uiMessage = "payment failed and data verified";
+              uiMessage = "payment failed and data verified. data: $data";
             });
           } else {
             setState(() {
-              uiMessage = "payment failed and data didn't verify";
+              uiMessage = "payment failed and data didn't verify. data: $data";
             });
           }
           break;
@@ -104,11 +104,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
           if (verified) {
             setState(() {
-              uiMessage = "payment success and data verified";
+              uiMessage = "payment success and data verified. data: $data";
             });
           } else {
             setState(() {
-              uiMessage = "payment failed and data didn't verify";
+              uiMessage = "payment success but data didn't verify. data: $data";
             });
           }
           break;
@@ -118,9 +118,15 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void startConnection() async {
+  Future<void> startConnection() async {
     socket = await Socket.connect("127.0.0.1", 2448);
     socket?.listen(messageReceived);
+  }
+
+  Future<void> stopConnection() async {
+    if (socket != null) {
+      await socket!.close();
+    }
   }
 
   @override
@@ -138,18 +144,30 @@ class _MyHomePageState extends State<MyHomePage> {
             Text(uiMessage),
             ElevatedButton(
               onPressed: () async {
+                await stopConnection();
+                await startConnection();
+
                 final key = KeyManager.fakePrivateKey;
                 const requestType = "payment_request";
                 const amount = 2000;
                 const payload = "id=1";
-                const standId = "29935e1e-634a-417c-95f9-437ae1c0f972";
-                final sign = SignatureManager.sign(key, "#$amount,$payload#");
+                const stanId = "29935e1e-634a-417c-95f9-437ae1c0f972";
+                final sign =
+                    SignatureManager.sign(key, "#$amount,$stanId,$payload#");
 
                 final json = """
-              { "type": "$requestType", "data": { "entity_type":"$requestType", "amount":$amount, "stand_id":"$standId", "payload":"$payload", "sign": "$sign" } }
+              { "type": "$requestType", "data": { "entity_type":"$requestType", "amount":$amount, "stan_id":"$stanId", "payload":"$payload", "sign": "$sign" } }
               """
                     .replaceAll("\n", "");
-                socket?.write("$json\n");
+
+                if (socket == null) {
+                  setState(() {
+                    uiMessage = "socket is not connected!";
+                  });
+                } else {
+                  socket!.write("$json\n");
+                  socket!.flush();
+                }
               },
               child: const Text("Send to POS"),
             ),
